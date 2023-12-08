@@ -5,7 +5,7 @@ use Module::Build;
 use 5.032;
 
 my $build = Module::Build->new( 
-  module_name     => 'Parser2023',
+  module_name     => 'LowLow',
   license         => 'perl',
   dist_author     => 'Vasco Horta <vhorta73@github.com>',
   requires => {

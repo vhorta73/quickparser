@@ -1,8 +1,8 @@
-package Parser2023;
+package LowLow;
 
 =head1 NAME
 
-Parser2023 - Quick parser.
+LowLow
 
 =head1 SYNOPSIS
 
