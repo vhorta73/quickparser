@@ -6,7 +6,7 @@ LowLow
 
 =head1 SYNOPSIS
 
-  perl Build.PL
+  perl Build.PL 
 
 =head1 DESCRIPTION
 
@@ -21,7 +21,7 @@ BEGIN {
   @EXPORT      = qw{};
   @EXPORT_OK   = qw{};
   %EXPORT_TAGS = ();
-}
+};
 
 1;
 __END__
