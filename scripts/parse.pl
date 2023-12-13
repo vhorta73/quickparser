@@ -49,7 +49,7 @@ exit ( 0 );
 foreach my $file ( @files ) {
 
 }
-die Data::Dumper::Dumper{ a => \@files};
+
 my @lines;
 foreach my $file ( @files ) {
   open( my $FH, $file );
