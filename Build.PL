@@ -15,6 +15,15 @@ my $build = Module::Build->new(
     'Moo::Role'            => 2.0,
     'namespace::clean'     => 0.27,
   },
+  test_files      => [
+    't/LowLow/Parser',
+  ],
+  build_requires => {
+    'Test::Exception'      => 0.43,
+    'Test::More'           => 0.47,
+    'Test::Pod::Coverage'  => 1.10,
+    'Test::MockModule'     => 0.177,
+  }
 );
 
 $build->dispatch( 'build' );
