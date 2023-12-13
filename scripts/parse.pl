@@ -4,6 +4,7 @@ use Modern::Perl;
 use Data::Dumper;
 use File::Find qw{ finddepth };
 use Const::Fast;
+use utf8;
 
 use LowLow::Parser::LineToHash;
 
