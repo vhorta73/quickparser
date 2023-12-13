@@ -13,6 +13,7 @@ my $build = Module::Build->new(
     'Modern::Perl'         => 1.2,
     'Moo'                  => 2.0,
     'Moo::Role'            => 2.0,
+    'Ref::Util'            => 0.204,
     'namespace::clean'     => 0.27,
   },
   test_files      => [

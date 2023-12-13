@@ -6,12 +6,24 @@ LowLow::Parser::LineToHash - Converts a String line to Hash based on regex confi
 
 =head1 SYNOPSIS
 
+  # Single result per data point:
+
   my $line_to_hash = LowLow::Parser::LineToHash->new(
     columns => [
-      column_name => qr/some regex from line to match this field data/,
+      { column_name => qr/some regex from line to match this field data/ },
       ...
     ],
   );
+
+  # Multiple result per data point:
+
+  my $line_to_hash = LowLow::Parser::LineToHash->new(
+    columns => [
+      { column_name => [ qr/some regex from line to match this field data/, qr/another/, .. ] },
+      ...
+    ],
+  );
+
 
   my $hash_ref = $line_to_hash->getHashFromLine( "Some text line." );
 
@@ -23,6 +35,7 @@ each of the field names.
 =cut
 
 use Modern::Perl;
+use Ref::Util qw{ is_arrayref };
 
 use Moo;
 use namespace::clean;
@@ -66,30 +79,40 @@ return C<HashRef>
 =cut
 
 sub getHashFromLine {
-    my ( $self, $line ) = @_;
+  my ( $self, $line ) = @_;
 
-    # A line must be supplied.
-    return {} unless defined $line;
+  # A line must be supplied.
+  return {} unless defined $line;
 
-    # It must have at least one character.
-    return {} unless length( $line );
+  # It must have at least one character.
+  return {} unless length( $line );
 
-    my %hash;
-    foreach my $element ( @{ $self->columns } ) {
-      while ( my ( $field, $regex ) = each %$element ) {
-        # No field and no regex, is skipped.
-        next unless $field and $regex;
+  my %hash;
+  foreach my $element ( @{ $self->columns } ) {
+    while ( my ( $field, $regex ) = each %$element ) {
+      my $regexes = is_arrayref( $regex ) ? $regex : [ $regex ];
 
+      # No field and no regexes, is skipped.
+      next unless $field and scalar @$regexes;
+
+      my @results;
+      foreach my $rx ( @$regexes ) {
         # No results are skipped.
-        my ( $result ) = $line =~ $regex;
+        my ( $result ) = $line =~ $rx;
+
         next unless defined $result;
 
-        # Data is saved when all criteria is met.
-        ( $hash{ $field } ) = $result;
+        push @results, $result;
+      }
+        
+      # Data is saved when all criteria is met.
+      if ( @results ) {
+        $hash{ $field } = @results > 1 ? \@results : $results[0];
       }
     }
+  }
 
-    return \%hash;
+  return \%hash;
 }
 
 # sub toCSV {
