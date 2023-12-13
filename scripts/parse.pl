@@ -4,9 +4,9 @@ use Modern::Perl;
 use Data::Dumper;
 use File::Find qw{ finddepth };
 use Const::Fast;
-use utf8;
 
 use LowLow::Parser::LineToHash;
+use LowLow::Utils::Interactive qw{ yes };
 
 const my $COLUMNS => [
   { date   => qr/\[([^,]+)/,                          },
@@ -23,12 +23,33 @@ finddepth(
   sub {
     return if ( $_ eq '.' || $_ eq '..' );
     my $file = $File::Find::name;
-    next unless $file =~ ".txt";
+    return if $file =~ m/\.pl$/;
     push @files, $File::Find::name;
   },
   '.',
 );
 
+unless ( @files ) {
+  print "No files found to process. Please drop files .txt in this folder and try again...\n";
+  exit( 0 );
+};
+
+print "Found these files to process: \n";
+foreach my $file ( @files ) {
+  print $file . "\n";
+}
+if ( yes( "Proceed?" ) ) {
+
+}
+else {
+  print "Exiting...\n\n";
+  exit( 0 );
+}
+exit ( 0 );
+foreach my $file ( @files ) {
+
+}
+die Data::Dumper::Dumper{ a => \@files};
 my @lines;
 foreach my $file ( @files ) {
   open( my $FH, $file );
