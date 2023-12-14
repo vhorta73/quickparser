@@ -24,7 +24,6 @@ LowLow::Parser::LineToHash - Converts a String line to Hash based on regex confi
     ],
   );
 
-
   my $hash_ref = $line_to_hash->getHashFromLine( "Some text line." );
 
 =head1 DESCRIPTION
@@ -51,21 +50,6 @@ return C<HashRef>
 =cut
 
 has columns => ( is => 'ro', required => 1 );
-
-# = has header => (
-#     is      => 'ro',
-#     builder => sub {
-#         my ($self) = @_;
-
-#         my @headers;
-#         foreach my $element ( @{ $self->columns } ) {
-#             my ( $field, $regex ) = each %$element;
-#             push @headers, $field;
-#         }
-
-#         return join( "|", @headers );
-#     },
-# );
 
 =head2 getHashFromLine
 
@@ -114,18 +98,6 @@ sub getHashFromLine {
 
   return \%hash;
 }
-
-# sub toCSV {
-#     my ( $self, $parsed ) = @_;
-
-#     my @data;
-#     foreach my $element ( @{ $self->columns } ) {
-#         my ($key) = keys %{$element};
-#         push @data, $parsed->{$key};
-#     }
-
-#     return join( "|", @data );
-# }
 
 1;
 __END__
