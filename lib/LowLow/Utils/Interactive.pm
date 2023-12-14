@@ -23,28 +23,52 @@ use Const::Fast;
 
 use Exporter 'import';
 
-$|=1;
+our @EXPORT_OK = (qw{ prompt });
 
-our @EXPORT_OK = (qw{
-  yes
-});
 
-sub yes {
-  my ( $question ) = @_;
 
-  $question //= "";
-  print "$question [Y/N] : ";
-  my $answer = <STDIN>;
-  chomp $answer;
+=head2 prompt
 
-  unless ( $answer && $answer =~ m{^(?:y|yes|n|no)$}i ) {
-    print "Not a valid answer. Please supply Y/N: ";
-    return yes( $answer );
-  };
+Given a C<String> for the question to promtp and the C<ArrayRef> for
+all the possible and acceptable answers, returns one of the elements
+of the possible answers, or undef if the answer did not meet the 
+criteria.
 
-  return 1 if $answer =~ m{^(?:y|yes)$}i;
+  my $selected_answer_or_undef = promt( C<String>, [ C<String>, C<String>, ..] );
 
-  return 0;
+return C<String> or undef
+
+=cut
+
+sub prompt {
+  my ( $question, $answers ) = @_;
+
+  print "$question [" . join( "|", @$answers ) . "] : ";
+
+  my $answer = _getInput();
+
+  foreach my $possible_answer ( @$answers ) {
+    next unless $possible_answer eq $answer;
+    return $answer;
+  }
+
+  return;
 }
+
+
+=head2 _getInput
+
+PRIVATE
+
+Reads a line from terminal.
+
+  my $line = _getInput();
+
+return C<String>
+
+=cut
+
+sub _getInput { my $answer = <STDIN>; chomp( $answer ); return $answer }
+
 1;
 __END__
