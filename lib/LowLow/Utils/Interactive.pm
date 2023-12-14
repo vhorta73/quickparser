@@ -7,24 +7,24 @@ LowLow::Utils::Insteractive - Provides static methods for interactive interactio
 =head1 SYNOPSIS
 
   use LowLow::Utils::Interactive qw{
-    yesno
+    prompt
   };
 
-  if ( yesno("Proceed?") ) { ..
+  if ( prompt( ..
 
 =head1 DESCRIPTION
 
-Supplies multiple static methods for interactive interactions.
+Supplies static methods for interactive interactions.
 
 =cut
 
 use Modern::Perl;
-use Const::Fast;
 
 use Exporter 'import';
 
-our @EXPORT_OK = (qw{ prompt });
-
+our @EXPORT_OK = (qw{
+  prompt
+});
 
 
 =head2 prompt
@@ -54,7 +54,6 @@ sub prompt {
 
   return;
 }
-
 
 =head2 _getInput
 
