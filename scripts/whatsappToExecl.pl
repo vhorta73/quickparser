@@ -6,7 +6,7 @@ use File::Find qw{ finddepth };
 use Const::Fast;
 
 use LowLow::Parser::LineToHash;
-use LowLow::Utils::Interactive qw{ yes };
+use LowLow::Utils::Interactive qw{ prompt };
 
 const my $COLUMNS => [
   { date   => qr/\[([^,]+)/,                          },
@@ -17,41 +17,47 @@ const my $COLUMNS => [
   { original => qr/(.*)/,                             },
 ];
 
-my @files;
+# If a file is given, take that.
+my $filename = $ARGV[0];
+unless ( $filename ) {
+  print "Please supply the file name to parse..\n";
+  exit( 0 );
+};
 
+my @files_found;
 finddepth(
   sub {
     return if ( $_ eq '.' || $_ eq '..' );
     my $file = $File::Find::name;
-    return if $file =~ m/\.pl$/;
-    push @files, $File::Find::name;
+    return unless $file =~ qr/$filename/;
+    push @files_found, $File::Find::name;
   },
   '.',
 );
 
-unless ( @files ) {
+unless ( @files_found ) {
   print "No files found to process. Please drop files .txt in this folder and try again...\n";
   exit( 0 );
 };
 
-print "Found these files to process: \n";
-foreach my $file ( @files ) {
-  print $file . "\n";
-}
-if ( yes( "Proceed?" ) ) {
+my @files_to_process;
+foreach my $file ( @files_found ) {
+  my $selected_action = prompt( "Process file $file?", [qw{y n q}] );
 
-}
-else {
-  print "Exiting...\n\n";
-  exit( 0 );
-}
-exit ( 0 );
-foreach my $file ( @files ) {
+  while ( not $selected_action ) {
+    $selected_action = prompt( "Invalid answer, please select one from these:", [qw{y n q}] );
+  };
 
+  next if $selected_action eq 'n';
+  print "Exiting application...\n" and exit( 0 )
+    if $selected_action eq 'q';
+
+  push @files_to_process, $file;
 }
 
+# TODO : look this differently
 my @lines;
-foreach my $file ( @files ) {
+foreach my $file ( @files_to_process ) {
   open( my $FH, $file );
   my @prev_lines;
   while ( my $line = <$FH> ) {
@@ -75,11 +81,40 @@ sub lineStart {
 }
 
 
+use Excel::Writer::XLSX;
+ 
+# Create a new Excel workbook
+my $workbook = Excel::Writer::XLSX->new( 'perl.xlsx' );
+ 
+# Add a worksheet
+my $worksheet = $workbook->add_worksheet();
+ 
+#  Add and define a format
+my $format = $workbook->add_format();
+$format->set_bold();
+$format->set_color( 'red' );
+$format->set_align( 'center' );
+ 
+# Write a formatted and unformatted string, row and column notation.
+my $col = 0;
+my $row = 0;
+$worksheet->write( $row, $col, 'Hi Excel!', $format );
+$worksheet->write( 1, $col, 'Hi Excel!' );
+ 
+# Write a number and a formula using A1 notation
+$worksheet->write( 'A3', 1.2345 );
+$worksheet->write( 'A4', '=SIN(PI()/4)' );
+ 
+$workbook->close();
+
+exit(0);
+
 my $line_to_hash = LowLow::Parser::LineToHash->new( columns => $COLUMNS );
 # open( my $OUT, ">", "lowlow.csv");
 # print $OUT join( "|", $parse_line->header ) . "\n";
 foreach my $line ( @lines ) {
   my $hash = $line_to_hash->getHashFromLine( $line );
+  
   use Data::Dumper;
   die Data::Dumper::Dumper { hash => $hash };
 #   my $parsed = $parse_line->toHash( $line );
