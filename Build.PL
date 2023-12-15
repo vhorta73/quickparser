@@ -18,6 +18,7 @@ my $build = Module::Build->new(
   },
   test_files      => [
     't/LowLow/Parser',
+    't/LowLow/Model',
   ],
   build_requires => {
     'Test::Exception'      => 0.43,
