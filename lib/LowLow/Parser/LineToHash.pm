@@ -91,11 +91,13 @@ sub getHashFromLine {
         
       # Data is saved when all criteria is met.
       if ( @results ) {
+        my $cleanup = $element->{cleanup} // sub { return $_[0] };
         $hash{ $field } = @results > 1 ? \@results : $results[0];
+        $hash{ $field } = $cleanup->( $hash{ $field } );
       }
     }
   }
-
+print $line."\n";
   return \%hash;
 }
 

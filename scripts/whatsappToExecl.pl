@@ -7,15 +7,10 @@ use Const::Fast;
 
 use LowLow::Parser::LineToHash;
 use LowLow::Utils::Interactive qw{ prompt };
+use LowLow::Processor;
+use LowLow::Model::Driver;
 
-const my $COLUMNS => [
-  { date   => qr/\[([^,]+)/,                          },
-  { time   => qr/,\s*([^\]]+)\]/,                     },
-  { name   => qr/\][^a-zA-Z0-9]*([^:]+):/,            },
-  { id     => qr/\][^0-9]+[^0-9]{0,1}([0-9]{2,}+)/,   },
-  { picker => qr/[0-9]{5,6}\s*([^ \[]+)/,             },
-  { original => qr/(.*)/,                             },
-];
+
 
 # If a file is given, take that.
 my $filename = $ARGV[0];
@@ -62,66 +57,108 @@ foreach my $file ( @files_to_process ) {
   my @prev_lines;
   while ( my $line = <$FH> ) {
     chomp( $line );
-    # if ( lineStart( $line ) ) {
-    #   push @lines, join ('', @prev_lines ) if @prev_lines;
-    #   @prev_lines = ();
-    #   push @prev_lines, $line;
-    # }
-    # else {
-      # push @prev_lines, $line;
-    # }
-    push @lines, $line;
+    if ( $line =~ m/^\[/ ) {
+      # New line, add previously completed line up and clear.
+      push @lines, join ( ' ', @prev_lines ) 
+        if @prev_lines;
+
+      @prev_lines = ();
+      push @prev_lines, $line;
+    }
+    else {
+      # Not the start of a new one, add it to the sequence.
+      $line =~ s/[\n\r]+//g;
+      push @prev_lines, $line;
+    }
   }
-  push @lines, join( ' ', @prev_lines ) if @prev_lines;
+  push @lines, join ( ' ', @prev_lines ) 
+    if @prev_lines;
   close $FH;
 }
-sub lineStart {
-  my ( $line ) = @_;
-  return $line =~ /^\[([^]]+)\]/ ? 1 : 0;
-}
 
+# my $line_to_hash     = LowLow::Parser::LineToHash->new( columns => $COLUMNS );
+my $processor = LowLow::Processor->new();
+$processor->processWhatsappLines( \@lines );
 
-use Excel::Writer::XLSX;
+# die Data::Dumper::Dumper { p => $processor };
+
+# my $line_to_hash = LowLow::Parser::LineToHash->new( columns => $COLUMNS );
+# foreach my $line ( @lines ) {
+#   my $hash = $line_to_hash->getHashFromLine( $line );
+  
+#   use Data::Dumper;
+#   die Data::Dumper::Dumper { hash => $hash };
+# }
+
+# use Excel::Writer::XLSX;
  
 # Create a new Excel workbook
-my $workbook = Excel::Writer::XLSX->new( 'perl.xlsx' );
+# my $workbook = Excel::Writer::XLSX->new( 'perl.xlsx' );
  
 # Add a worksheet
-my $worksheet = $workbook->add_worksheet();
+# my $worksheet = $workbook->add_worksheet();
  
 #  Add and define a format
-my $format = $workbook->add_format();
-$format->set_bold();
-$format->set_color( 'red' );
-$format->set_align( 'center' );
+# my $bold_format = $workbook->add_format();
+# $bold_format->set_bold();
+# $bold_format->set_align( 'left' );
+# my $format = $workbook->add_format();
+# $format->set_align( 'left' );
+# my @test = (qw{
+#   date
+#   time
+#   name
+#   id
+#   picker
+#   slot
+#   estado
+#   hour
+#   original
+# });
+# my $row = 0;
+# $worksheet->write( $row, 0, 'Data', $bold_format );
+# $worksheet->write( $row, 1, 'Hora', $bold_format );
+# $worksheet->write( $row, 2, 'Driver', $bold_format );
+# $worksheet->write( $row, 3, 'ID', $bold_format );
+# $worksheet->write( $row, 4, 'Picker', $bold_format );
+# $worksheet->write( $row, 5, 'Slot', $bold_format );
+# $worksheet->write( $row, 6, 'Estado', $bold_format );
+# $worksheet->write( $row, 7, 'Horario', $bold_format );
+# $worksheet->write( $row, 8, 'Inicio Turno', $bold_format );
+# $worksheet->write( $row, 9, 'Inicio Pausa', $bold_format );
+# $worksheet->write( $row, 10, 'Fim Pausa', $bold_format );
+# $worksheet->write( $row, 11, 'Fim Turno', $bold_format );
+# $worksheet->write( $row, 12, 'Horas Trab', $bold_format );
+# $worksheet->write( $row, 13, 'Loja', $bold_format );
+
+# # my $driver = LowLow::Model::Driver->new( "Vasco" );
+# # my $driver_processor = LowLow::Processor->newProcessor( $driver );
+# #   $driver_processor->process( %$hash );
+
+#   next unless $hash->{date};
+#   next unless $hash->{name};
+#   next if $hash->{name} =~ m/[0-9]+/;
+#   next unless $hash->{id};
+#   my $col = 0;
+#   $row++;
+#   foreach my $t ( @test ) {
+#     $worksheet->write( $row, $col++, $hash->{ $t }, $format );
+#   }
+
+# # Write a number and a formula using A1 notation
+# $worksheet->write( 'A3', 1.2345 );
+# $worksheet->write( 'A4', '=SIN(PI()/4)' );
  
-# Write a formatted and unformatted string, row and column notation.
-my $col = 0;
-my $row = 0;
-$worksheet->write( $row, $col, 'Hi Excel!', $format );
-$worksheet->write( 1, $col, 'Hi Excel!' );
- 
-# Write a number and a formula using A1 notation
-$worksheet->write( 'A3', 1.2345 );
-$worksheet->write( 'A4', '=SIN(PI()/4)' );
- 
-$workbook->close();
+# $workbook->close();
 
 exit(0);
 
-my $line_to_hash = LowLow::Parser::LineToHash->new( columns => $COLUMNS );
-# open( my $OUT, ">", "lowlow.csv");
-# print $OUT join( "|", $parse_line->header ) . "\n";
-foreach my $line ( @lines ) {
-  my $hash = $line_to_hash->getHashFromLine( $line );
-  
-  use Data::Dumper;
-  die Data::Dumper::Dumper { hash => $hash };
-#   my $parsed = $parse_line->toHash( $line );
-#   my $csv_line = $parse_line->toCSV( $parsed );
-#   print $OUT $csv_line . "\n";
-}
-# close $OUT;
+
+
+
+
+
+
 
 
 1;

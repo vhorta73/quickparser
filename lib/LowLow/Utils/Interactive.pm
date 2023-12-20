@@ -24,6 +24,7 @@ use Exporter 'import';
 
 our @EXPORT_OK = (qw{
   prompt
+  promptComplex
 });
 
 
@@ -43,6 +44,8 @@ return C<String> or undef
 sub prompt {
   my ( $question, $answers ) = @_;
 
+  return _promptAnything( $question ) unless $answers;
+
   print "$question [" . join( "|", @$answers ) . "] : ";
 
   my $answer = _getInput();
@@ -53,6 +56,48 @@ sub prompt {
   }
 
   return;
+}
+
+=head2 promptComplex
+
+Given a C<String> for the question to ask and a C<HashRef> for the
+tuple of values C<String> acceptable and respectiver C<RegRex> matching
+those values, returns an answer that match any of the C<RegRex> or undef.
+
+  my $result = promptComplex( "Question", C<HashRef> );
+
+return C<String> or undef
+
+=cut
+
+sub promptComplex {
+  my ( $question, $config ) = @_;
+
+  return prompt( $question ) unless defined $config;
+
+  my @answers;
+  foreach my $line ( @$config ) {
+    push @answers, $line->{label};
+  }
+
+  print "$question - " . join( ", ", @answers ) . " : ";
+
+  my $answer = _getInput();
+
+  foreach my $line ( @$config ) {
+    return $answer if $answer =~ m/$line->{regex}/;
+  }
+
+  return;
+}
+
+
+sub _promptAnything {
+  my ( $question ) = @_;
+  
+  print "$question : ";
+  
+  return _getInput();
 }
 
 =head2 _getInput

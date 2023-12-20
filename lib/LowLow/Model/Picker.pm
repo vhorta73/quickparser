@@ -25,30 +25,11 @@ The C<String> name of the picker.
 
   my $name = $self->name();
 
-return C<String>
+return C<String> or undef
 
 =cut
 
-has name => ( is => 'ro', required => 1 );
-
-=head2 BUILDARGS
-
-  LowLow::Model::Piker->new( "Picker Name" );
-
-  LowLow::Moder::Picker->new( name => "Picker Name" );
-
-=cut
-
-sub BUILDARGS {
-  my ( $class, @args ) = @_;
-
-  if ( @args == 1 ) {
-    return { name => $args[0] };
-  }
-  else {
-    return { @args };
-  }
-}
+has name => ( is => 'ro', required => 0 );
 
 1;
 __END__

@@ -14,6 +14,7 @@ my $build = Module::Build->new(
     'Moo'                  => 2.0,
     'Moo::Role'            => 2.0,
     'Ref::Util'            => 0.204,
+    'Module::Load'         => 0.36,
     'namespace::clean'     => 0.27,
   },
   test_files      => [
