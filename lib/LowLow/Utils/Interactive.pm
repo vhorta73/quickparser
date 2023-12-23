@@ -91,6 +91,18 @@ sub promptComplex {
   return;
 }
 
+=head2 _promptAnything
+
+PRIVATE
+
+Prints a question and returns a line from terminal.
+
+  my $line = _promptAnything( C<String> );
+
+return C<String>
+
+=cut
+
 
 sub _promptAnything {
   my ( $question ) = @_;
