@@ -97,7 +97,7 @@ sub getHashFromLine {
       }
     }
   }
-print $line."\n";
+
   return \%hash;
 }
 

@@ -6,10 +6,7 @@ LowLow::Model::Package - Class defining a package to deliver.
 
 =head1 SYNOPSIS
 
-  LowLow::Model::Package->new(
-    id => '61430',
-    slot => '12:00',
-  );
+  LowLow::Model::Package->new( id => '61430' );
 
 =head1 DESCRIPTION
 
@@ -21,6 +18,7 @@ use Modern::Perl;
 
 use Moo;
 use namespace::clean;
+
 
 =head2 id
 
@@ -44,7 +42,7 @@ return C<String> or undef
 
 =cut
 
-has slot => ( is => 'ro', required => 0 ); 
+has slot => ( is => 'rwp', required => 0 ); 
 
 =head2 picked
 
@@ -56,7 +54,19 @@ return L<LowLow::Model::DateTime> or undef
 
 =cut
 
-has picked => ( is => 'ro', required => 0 ); 
+has picked => ( is => 'rwp', required => 0 ); 
+
+=head2 picker
+
+The C<LowLow::Model::Picker>.
+
+  my $picker = $self->picker();
+
+return L<LowLow::Model::Picker> or undef
+
+=cut
+
+has picker => ( is => 'rwp', required => 0 ); 
 
 =head2 delivered
 
@@ -68,34 +78,87 @@ return C<LowLow::Model::DateTime> or undef
 
 =cut
 
-has delivered => ( is => 'ro', required => 0 ); 
+has delivered => ( is => 'rwp', required => 0 ); 
+
+=head2 estimatedAt
+
+Given a C<String> for time, sets this as the slot.
+
+  $self->estimatedAt( C<String> );
+
+return Nothing
+
+=cut
 
 sub estimatedAt {
   my ( $self, $time ) = @_;
-  return LowLow::Model::Package->new(
-    slot => $time,
-    id => $self->id,
-    picked => $self->picked,
-    delivered => $self->delivered,
-  );
+
+  $self->_set_slot( $time );
+
+  return;
 }
+
+=head2 pickedAt
+
+Given a C<LowLow::Model::DateTime>, sets this as picked
+unless picked is already set.
+
+  $self->pickedAt( C<LowLow::Model::DateTime> );
+
+return Nothing
+
+=cut
+
 sub pickedAt {
   my ( $self, $datetime ) = @_;
-  return LowLow::Model::Package->new(
-    slot => $self->slot,
-    id => $self->id,
-    picked => $datetime,
-    delivered => $self->delivered,
-  );
+
+  return if $self->picked;
+
+  $self->_set_picked( $datetime );
+
+  return;
 }
+
+=head2 setPicker
+
+Given a C<LowLow::Model::Picker>, sets this as picker
+unless picker is already set.
+
+  $self->setPicker( C<LowLow::Model::Picker> );
+
+return Nothing
+
+=cut
+
+sub setPicker {
+  my ( $self, $picker ) = @_;
+
+  return if $self->picker;
+
+  $self->_set_picker( $picker );
+
+  return;
+}
+
+=head2 deliveredAt
+
+Given a C<LowLow::Model::DateTime>, sets this as delivered
+date time.
+
+  $self->deliveredAt( C<LowLow::Model::DateTime> );
+
+return Nothing
+
+=cut
+
 sub deliveredAt {
   my ( $self, $datetime ) = @_;
-  return LowLow::Model::Package->new(
-    slot => $self->slot,
-    id => $self->id,
-    picked => $self->picked,,
-    delivered => $datetime,
-  );
+
+  $self->_set_delivered( $datetime );
+
+  return;
 }
+
+
 1;
 __END__

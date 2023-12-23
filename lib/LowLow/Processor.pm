@@ -23,9 +23,11 @@ use Ref::Util qw{ is_blessed_ref };
 
 use LowLow::Parser::LineToHash;
 use LowLow::Processor::DefaultStore;
+use LowLow::Processor::Driver;
 
 use Moo;
 use namespace::clean;
+
 
 my $COLUMNS = [
   { 
@@ -53,10 +55,13 @@ my $COLUMNS = [
     picker      => qr/[0-9]+\s+([a-zA-Z]+)\s+[0-9]{2}:[0-9]{2}$/,
   },
   { 
-    slot        => qr/[0-9]+\s+[a-zA-Z]+\s+([0-9]{2}:{1,}[0-9]{2})$/,
+    slot        => [
+      qr/[0-9]+\s+[a-zA-Z]+\s+([0-9]{2}:{1,}[0-9]{2})$/,
+      qr/[^:0-9]+([0-9]{2}:[0-9]{2})[^:0-9]+/,
+    ],
   },
   { 
-    in_delivery => qr/[0-9]+\s+[a-zA-Z]+\s+[0-9]{2}:{1,}[0-9]{2}$/,
+    in_delivery => [ qr/[0-9]+\s+[a-zA-Z]+\s+[0-9]{2}:{1,}[0-9]{2}$/, ],
   },
   { 
     delivered   => [ qr/[0-9]+\s+[a-zA-Z]+$/, qr/[0-9]+\s+[a-zA-Z]+\s+[a-zA-Z]{2}$/ ],
@@ -70,10 +75,6 @@ my $COLUMNS = [
 ];
 
 
-# Namespace for under which this factory class will look.
-const my $NAMESPACE => 'LowLow::Processor';
-
-
 =head2 driver_processor
 
 The L<LowLow::Processor::Driver> instantiation.
@@ -85,19 +86,9 @@ return L<LowLow::Processor::Driver>
 =cut
 
 has driver_processor => ( 
-  is     => 'ro',
-  builder => sub {
-    my ( $self ) = @_;
-
-    my $processor_class_name = join( "::",
-      $NAMESPACE,
-      "Driver"
-    );
-
-    load $processor_class_name;
-
-    return $processor_class_name->new();
-  },
+  is       => 'ro',
+  init_arg => undef,
+  default  => sub { return LowLow::Processor::Driver->new() },
 );
 
 =head2 processWhatsappLines
@@ -115,23 +106,12 @@ sub processWhatsappLines {
   my ( $self, $lines ) = @_;
 
   my $line_to_hash = LowLow::Parser::LineToHash->new( columns => $COLUMNS );
-my @test = (
-"[01/12/23, 10:08:44] Claudio Merc: Saindo com",
-"[01/12/23, 10:09:13] Claudio Merc: .61430 Fer 10:00",
-"[01/12/23, 10:09:27] Claudio Merc: .62578 iv 10:00",
-"[01/12/23, 10:09:50] Claudio Merc: .63253 iv 10:30",
-);
 
   $self->driver_processor->processDriver( 
     $line_to_hash->getHashFromLine( $_ )
   ) for grep { $_ =~ m/Claudio/ } @$lines;
-  # foreach my $line ( @test ) {
-  #   my $hash = $line_to_hash->getHashFromLine( $line );
-  #   print Data::Dumper::Dumper{ h => $hash };
-  # }
 
   $self->driver_processor->processDeliveries();
-  die Data::Dumper::Dumper { a => $self->driver_processor };
 
   return;
 }

@@ -38,50 +38,98 @@ return C<String>
 
 has name => ( is => 'ro', required => 1 );
 
+=head2 startShift
+
+Given a L<LowLow::Model::DateTime>, sets the start of the shift
+for this driver at the given date.
+
+  $self->startShift( L<LowLow::Model::DateTime> );
+
+return Nothing
+
+=cut
+
 sub startShift {
-  my ( $self, $data, $datetime ) = @_;
+  my ( $self, $datetime ) = @_;
 
   my $date = $datetime->date;
   my $time = $datetime->time;
 
   my $day_shift = $self->{_day_shift}->{ $date } //= LowLow::Model::Employee::DayShift->new();
-  $self->{_day_shift}->{ $date }= $day_shift->startShiftAt( $datetime );
+
+  $day_shift->startShiftAt( $datetime );
 
   return;
 }
+
+=head2 startShift
+
+Given a L<LowLow::Model::DateTime>, sets the start of the break
+for this driver at the given date.
+
+  $self->startBreak( L<LowLow::Model::DateTime> );
+
+return Nothing
+
+=cut
 
 sub startBreak {
-  my ( $self, $data, $datetime ) = @_;
+  my ( $self, $datetime ) = @_;
 
   my $date = $datetime->date;
   my $time = $datetime->time;
 
   my $day_shift = $self->{_day_shift}->{ $date } //= LowLow::Model::Employee::DayShift->new();
-  $self->{_day_shift}->{ $date } = $day_shift->startBreakAt( $datetime );
+
+  $day_shift->startBreakAt( $datetime );
 
   return;
 }
+
+=head2 endBreak
+
+Given a L<LowLow::Model::DateTime>, sets the end of the break
+for this driver at the given date.
+
+  $self->endBreak( L<LowLow::Model::DateTime> );
+
+return Nothing
+
+=cut
 
 sub endBreak {
-  my ( $self, $data, $datetime ) = @_;
+  my ( $self, $datetime ) = @_;
 
   my $date = $datetime->date;
   my $time = $datetime->time;
 
   my $day_shift = $self->{_day_shift}->{ $date } //= LowLow::Model::Employee::DayShift->new();
-  $self->{_day_shift}->{ $date } = $day_shift->endBreakAt( $datetime );
+
+  $day_shift->endBreakAt( $datetime );
 
   return;
 }
 
+=head2 endShift
+
+Given a L<LowLow::Model::DateTime>, sets the end of the shift
+for this driver at the given date.
+
+  $self->endShift( L<LowLow::Model::DateTime> );
+
+return Nothing
+
+=cut
+
 sub endShift {
-  my ( $self, $data, $datetime ) = @_;
+  my ( $self, $datetime ) = @_;
 
   my $date = $datetime->date;
   my $time = $datetime->time;
 
   my $day_shift = $self->{_day_shift}->{ $date } //= LowLow::Model::Employee::DayShift->new();
-  $self->{_day_shift}->{ $date } = $day_shift->endShiftAt( $datetime );
+
+  $day_shift->endShiftAt( $datetime );
 
   return;
 }
@@ -125,44 +173,46 @@ sub process {
     foreach my $data ( @deliveries_for_date ) { 
       my $original_line = $data->{original};
       next unless $data->{date} =~ m/20231201/;
-      next unless $data->{id};
 
       my $datetime = LowLow::Model::DateTime->new( "$data->{date} $data->{time}" );
-      my $picker   = LowLow::Model::Picker->new( name => $data->{picker} );
+
+      $self->startShift( $datetime ) if $original_line =~ m/cio\s+do\s+turno\b/i;
+      $self->endBreak(   $datetime ) if $original_line =~ m/\bfim\b.*\bturno\b/i;
+      $self->startBreak( $datetime ) if $original_line =~ m/\bintervalo\b/i;
+
+      next unless $data->{id};
+
       my $package  = $self->getPackage( $data->{id} );
-
-      $self->updatePackage( $package->estimatedAt( $data->{slot} ) ) if $data->{slot};
-      $self->updatePackage( $package->pickedAt( $datetime ) )        if $data->{in_delivery};
-      $self->updatePackage( $package->deliveredAt( $datetime ) )     if $data->{delivered};
-
-  print $data->{original} . "\n";  
-      if ( $original_line =~ m/cio\s+do\s+turno\b/i ) {
-        $self->startShift( $data, $datetime );
-      }
-  
-      if ( $original_line =~ m/\bfim\b.*\bturno\b/i  ) {
-        $self->endBreak( $data, $datetime );
-      }
-  
-      if ( $original_line =~ m/\bintervalo\b/i ) {
-        $self->startBreak( $data, $datetime );
-      }
+      $package->estimatedAt( $data->{slot} ) if $data->{slot};
+      $package->pickedAt(    $datetime     ) if $data->{in_delivery} || $data->{slot};
+      $package->deliveredAt( $datetime     ) if $data->{delivered};
+      $package->setPicker( LowLow::Model::Picker->new( name => $data->{picker} ) ) if $data->{picker};
     }
   }
 
   $self->{_raw_data} = undef;
-  # die Data::Dumper::Dumper { a => $self };
 
   return;
 }
 
+=head2 getPackage
+
+Given a C<String> for a package id, returns the L<LowLow::Model::Package> if
+already instantiated in cache or a new instantiation with the supplied id. 
+Dies when no id supplied.
+
+  my $package = $self->getPackage( C<String> );
+
+return L<LowLow::Moder::Package>
+
+=cut
+
 sub getPackage {
   my ( $self, $id ) = @_;
+
+  die "No id supplied" unless $id;
+
   return $self->{_packages}->{ $id } //= LowLow::Model::Package->new( id => $id );
-}
-sub updatePackage {
-  my ( $self, $package ) = @_;
-  return $self->{_packages}->{ $package->id } = $package;
 }
 
 1;
