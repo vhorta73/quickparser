@@ -6,25 +6,25 @@ use Test::More;
 require_ok( 'LowLow::Parser::LineToHash' );
 
 
-=head2 test_no_columns
+=head2 test_no_rules
 
-Confirming no columns supplied produces no result but still
+Confirming no rules supplied produces no result but still
 a C<HashRef> is returned.
 
 =cut
 
-sub test_no_columns {
+sub test_no_rules {
   my $line_to_hash = LowLow::Parser::LineToHash->new(
-    columns => []
+    rules => []
   );
 
   my $result = $line_to_hash->getHashFromLine( "" );
   my %hash;
 
-  is_deeply( \%hash, $result, "Test No Columns." );
+  is_deeply( \%hash, $result, "Test No Rules." );
 }
 
-test_no_columns();
+test_no_rules();
 
 =head2 test_one_column_match
 
@@ -35,7 +35,7 @@ a C<HashRef> with the matched data.
 
 sub test_one_column_match {
   my $line_to_hash = LowLow::Parser::LineToHash->new(
-    columns => [
+    rules => [
       { 'column_name' => qr/(this)/ },
     ],
   );
@@ -59,7 +59,7 @@ result produces a C<HashRef> with no results.
 
 sub test_one_column_no_match {
   my $line_to_hash = LowLow::Parser::LineToHash->new(
-    columns => [
+    rules => [
       { 'column_name' => qr/(this)/ },
     ],
   );
@@ -81,7 +81,7 @@ a C<HashRef> with the matched data.
 
 sub test_many_column_match {
   my $line_to_hash = LowLow::Parser::LineToHash->new(
-    columns => [
+    rules => [
       { 'column_this' => qr/(this)/ },
       { 'column_that' => qr/(that)/ },
     ],
@@ -107,7 +107,7 @@ result produces a C<HashRef> with no results.
 
 sub test_many_column_no_match {
   my $line_to_hash = LowLow::Parser::LineToHash->new(
-    columns => [
+    rules => [
       { 'column_this' => qr/(this)/ },
       { 'column_that' => qr/(that)/ },
     ],
@@ -130,7 +130,7 @@ result.
 
 sub test_mix_column_no_match {
   my $line_to_hash = LowLow::Parser::LineToHash->new(
-    columns => [
+    rules => [
       { 'column_this' => qr/(this)/ },
       { 'column_that' => qr/(that)/ },
     ],
@@ -155,7 +155,7 @@ result.
 
 sub test_multiple_results {
   my $line_to_hash = LowLow::Parser::LineToHash->new(
-    columns => [
+    rules => [
       { 'column_this' => [ qr/(this)/, qr/(this)/, ] },
       { 'column_that' => qr/(that)/ },
     ],

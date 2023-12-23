@@ -9,7 +9,7 @@ LowLow::Parser::LineToHash - Converts a String line to Hash based on regex confi
   # Single result per data point:
 
   my $line_to_hash = LowLow::Parser::LineToHash->new(
-    columns => [
+    rules => [
       { column_name => qr/some regex from line to match this field data/ },
       ...
     ],
@@ -18,7 +18,7 @@ LowLow::Parser::LineToHash - Converts a String line to Hash based on regex confi
   # Multiple result per data point:
 
   my $line_to_hash = LowLow::Parser::LineToHash->new(
-    columns => [
+    rules => [
       { column_name => [ qr/some regex from line to match this field data/, qr/another/, .. ] },
       ...
     ],
@@ -39,17 +39,17 @@ use Ref::Util qw{ is_arrayref };
 use Moo;
 use namespace::clean;
 
-=head2 columns
+=head2 rules
 
-The C<HashRef> of for the column names as keys and regex as values.
+The C<HashRef> of for the rules setting names as keys and regex as values.
 
-  my $columns = $self->columns();
+  my $rules = $self->rules();
 
 return C<HashRef>
 
 =cut
 
-has columns => ( is => 'ro', required => 1 );
+has rules => ( is => 'ro', required => 1 );
 
 =head2 getHashFromLine
 
@@ -72,7 +72,7 @@ sub getHashFromLine {
   return {} unless length( $line );
 
   my %hash;
-  foreach my $element ( @{ $self->columns } ) {
+  foreach my $element ( @{ $self->rules } ) {
     while ( my ( $field, $regex ) = each %$element ) {
       my $regexes = is_arrayref( $regex ) ? $regex : [ $regex ];
 
